@@ -37,7 +37,10 @@ jobs:
           echo "### Gradle failure" >> "$GITHUB_STEP_SUMMARY"
           grep -E '(^e:| error: |ERROR|FAILURE|Compilation error|Unresolved reference|Task .* FAILED)' gradle.log | tail -n 50 > gradle-errors.log || true
           tail -n 100 gradle.log >> "$GITHUB_STEP_SUMMARY"
-          details=$(tail -n 100 gradle.log)
+          details=$(awk '/^\* What went wrong:/{capture=1} /^\* Try:/{capture=0} capture' gradle.log)
+          causes=$(grep -E '^(Caused by:|[[:space:]]*> |Execution failed for task|ERROR:|.*Dex.*error)' gradle.log | head -n 80 || true)
+          details="$details"$'\n--- causes ---\n'"$causes"
+          if [ -z "$details" ]; then details=$(tail -n 150 gradle.log); fi
           details=${details//'%'/'%25'}
           details=${details//$'\r'/'%0D'}
           details=${details//$'\n'/'%0A'}
