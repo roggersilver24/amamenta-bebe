@@ -11,6 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,7 +29,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          ./gradlew testDebugUnitTest lintDebug --stacktrace 2>&1 | tee gradle.log
+          ./gradlew testDebugUnitTest lintDebug assembleDebug --stacktrace 2>&1 | tee gradle.log
       - name: Report Gradle failure
         if: failure()
         shell: bash
@@ -43,8 +44,6 @@ jobs:
             safe_line=${safe_line//$'\n'/'%0A'}
             echo "::error::$safe_line"
           done
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
       - name: Prepare artifact
         run: cp app/build/outputs/apk/debug/app-debug.apk amamenta-bebe.apk
       - name: Upload APK
