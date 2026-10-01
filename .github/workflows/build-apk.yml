@@ -34,8 +34,10 @@ jobs:
         shell: bash
         run: |
           echo "### Gradle failure" >> "$GITHUB_STEP_SUMMARY"
-          tail -n 80 gradle.log >> "$GITHUB_STEP_SUMMARY"
-          tail -n 40 gradle.log | while IFS= read -r line; do
+          grep -E '(^e:| error: |ERROR|FAILURE|Compilation error|Unresolved reference|Task .* FAILED)' gradle.log | tail -n 50 > gradle-errors.log || true
+          cat gradle-errors.log >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -s gradle-errors.log ]; then tail -n 50 gradle.log > gradle-errors.log; fi
+          cat gradle-errors.log | while IFS= read -r line; do
             safe_line=${line//'%'/'%25'}
             safe_line=${safe_line//$'\r'/'%0D'}
             safe_line=${safe_line//$'\n'/'%0A'}
