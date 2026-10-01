@@ -193,10 +193,10 @@ private val DarkColors = darkColorScheme(primary = Color(0xFFFFB0C8), primaryCon
             listOf(ThemeMode.SYSTEM to "Sistema", ThemeMode.LIGHT to "Claro", ThemeMode.DARK to "Escuro").forEachIndexed { i, pair -> SegmentedButton(settings.theme == pair.first, { vm.setTheme(pair.first) }, SegmentedButtonDefaults.itemShape(i,3)) { Text(pair.second) } }
         } }
         item { HorizontalDivider(); Text("Permissões", fontSize = 20.sp, fontWeight = FontWeight.Bold) }
-        item { PermissionCard("Notificações", notificationGranted, if (notificationGranted) null else {
+        item { PermissionCard("Notificações", notificationGranted, if (notificationGranted) null else ({
             if (Build.VERSION.SDK_INT >= 33) notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) else context.startActivity(NotificationHelper.openNotificationSettings(context))
-        }) }
-        item { PermissionCard("Alarmes e lembretes", exactGranted, if (exactGranted || Build.VERSION.SDK_INT < 31) null else { runCatching { context.startActivity(NotificationHelper.openExactAlarmSettings(context)) } }) }
+        })) }
+        item { PermissionCard("Alarmes e lembretes", exactGranted, if (exactGranted || Build.VERSION.SDK_INT < 31) null else ({ runCatching { context.startActivity(NotificationHelper.openExactAlarmSettings(context)) }; Unit })) }
         if (!notificationGranted || !exactGranted) item { Text("Sem essas permissões, o Android pode impedir ou atrasar o aviso. O registro das mamadas continua funcionando normalmente.", color = MaterialTheme.colorScheme.error, fontSize = 13.sp) }
         item { HorizontalDivider(); Text("Sobre", fontSize = 20.sp, fontWeight = FontWeight.Bold); Text("Amamenta Bebê 1.0.0\nFunciona offline, sem conta, anúncios ou envio de dados.") }
     }
