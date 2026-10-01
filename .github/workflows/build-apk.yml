@@ -36,14 +36,12 @@ jobs:
         run: |
           echo "### Gradle failure" >> "$GITHUB_STEP_SUMMARY"
           grep -E '(^e:| error: |ERROR|FAILURE|Compilation error|Unresolved reference|Task .* FAILED)' gradle.log | tail -n 50 > gradle-errors.log || true
-          cat gradle-errors.log >> "$GITHUB_STEP_SUMMARY"
-          if [ ! -s gradle-errors.log ]; then tail -n 50 gradle.log > gradle-errors.log; fi
-          cat gradle-errors.log | while IFS= read -r line; do
-            safe_line=${line//'%'/'%25'}
-            safe_line=${safe_line//$'\r'/'%0D'}
-            safe_line=${safe_line//$'\n'/'%0A'}
-            echo "::error::$safe_line"
-          done
+          tail -n 100 gradle.log >> "$GITHUB_STEP_SUMMARY"
+          details=$(tail -n 100 gradle.log)
+          details=${details//'%'/'%25'}
+          details=${details//$'\r'/'%0D'}
+          details=${details//$'\n'/'%0A'}
+          echo "::error title=Gradle build failed::$details"
       - name: Prepare artifact
         run: cp app/build/outputs/apk/debug/app-debug.apk amamenta-bebe.apk
       - name: Upload APK
