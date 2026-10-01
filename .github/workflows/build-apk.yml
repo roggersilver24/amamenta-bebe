@@ -25,7 +25,22 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x gradlew
       - name: Unit tests and lint
-        run: ./gradlew testDebugUnitTest lintDebug --stacktrace
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew testDebugUnitTest lintDebug --stacktrace 2>&1 | tee gradle.log
+      - name: Report Gradle failure
+        if: failure()
+        shell: bash
+        run: |
+          echo "### Gradle failure" >> "$GITHUB_STEP_SUMMARY"
+          tail -n 80 gradle.log >> "$GITHUB_STEP_SUMMARY"
+          tail -n 40 gradle.log | while IFS= read -r line; do
+            safe_line=${line//'%'/'%25'}
+            safe_line=${safe_line//$'\r'/'%0D'}
+            safe_line=${safe_line//$'\n'/'%0A'}
+            echo "::error::$safe_line"
+          done
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
       - name: Prepare artifact
