@@ -59,11 +59,16 @@ jobs:
         run: |
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/original.jks"
           echo "ANDROID_SIGNING_STORE=$RUNNER_TEMP/original.jks" >> "$GITHUB_ENV"
+          keytool -exportcert -keystore "$RUNNER_TEMP/original.jks" -storepass:env ANDROID_KEYSTORE_PASSWORD -alias "$ANDROID_KEY_ALIAS" -file "$RUNNER_TEMP/signing.der"
+          actual=$(sha256sum "$RUNNER_TEMP/signing.der" | cut -d ' ' -f 1)
+          expected=$(printf '%s' "$INSTALLED_CERT_SHA256" | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]')
+          echo "Keystore certificate SHA-256: $actual"
+          test "$actual" = "$expected"
       - name: Unit tests and lint
         shell: bash
         run: |
           set -o pipefail
-          ./gradlew testDebugUnitTest lintDebug assembleDebug --stacktrace 2>&1 | tee gradle.log
+          ./gradlew testDebugUnitTest lintDebug lintRelease assembleRelease --stacktrace 2>&1 | tee gradle.log
       - name: Report Gradle failure
         if: failure()
         shell: bash
@@ -84,12 +89,12 @@ jobs:
         shell: bash
         run: |
           signer=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)
-          "$signer" verify --print-certs app/build/outputs/apk/debug/app-debug.apk > certificate.txt
+          "$signer" verify --print-certs app/build/outputs/apk/release/app-release.apk > certificate.txt
           actual=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' certificate.txt | tr -d ':' | tr '[:upper:]' '[:lower:]')
           expected=$(printf '%s' "$INSTALLED_CERT_SHA256" | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]')
           test ${#expected} -eq 64
           test "$actual" = "$expected"
-          cp app/build/outputs/apk/debug/app-debug.apk amamenta-bebe.apk
+          cp app/build/outputs/apk/release/app-release.apk amamenta-bebe.apk
       - name: Explain blocked update
         if: env.ANDROID_SIGNING_STORE == ''
         run: |

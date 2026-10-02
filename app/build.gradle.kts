@@ -36,7 +36,7 @@ android {
             keyAlias = providers.environmentVariable("ANDROID_KEY_ALIAS").get()
             keyPassword = providers.environmentVariable("ANDROID_KEY_PASSWORD").get()
         }
-        buildTypes.getByName("debug").signingConfig = existingKey
+        // Distribution signing is assigned only to release.
         buildTypes.getByName("release").signingConfig = existingKey
     }
     compileOptions {
