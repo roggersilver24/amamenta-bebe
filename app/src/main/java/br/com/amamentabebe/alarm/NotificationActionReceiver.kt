@@ -12,19 +12,21 @@ import kotlinx.coroutines.launch
 
 class NotificationActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action !in setOf(ACTION_FEED, ACTION_SNOOZE_10, ACTION_SNOOZE_20)) return
         val result = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
+            try {
             val app = context.applicationContext as AmamentaApplication
             val scheduler = AlarmScheduler(context, app.settings)
             when (intent.action) {
                 ACTION_FEED -> app.repository.quickAdd()?.let { feeding ->
                     scheduler.schedule(FeedingCalculator.nextTime(feeding.timeMillis, app.repository.intervalMinutes()))
                 }
-                ACTION_SNOOZE_10 -> scheduler.schedule(System.currentTimeMillis() + 10 * 60_000L)
-                ACTION_SNOOZE_20 -> scheduler.schedule(System.currentTimeMillis() + 20 * 60_000L)
+                ACTION_SNOOZE_10 -> scheduler.schedule(ReminderPolicy.snoozeAt(System.currentTimeMillis(), 10))
+                ACTION_SNOOZE_20 -> scheduler.schedule(ReminderPolicy.snoozeAt(System.currentTimeMillis(), 20))
             }
             NotificationManagerCompat.from(context).cancel(NotificationHelper.NOTIFICATION_ID)
-            result.finish()
+            } finally { result?.finish() }
         }
     }
     companion object {

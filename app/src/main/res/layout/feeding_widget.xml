@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp" android:background="#FFF8F5">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Amamenta Bebê" android:textSize="20sp" android:textColor="#3B252C" android:textStyle="bold" />
+    <TextView android:id="@+id/widget_latest" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:textColor="#3B252C" />
+    <TextView android:id="@+id/widget_next" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:textColor="#3B252C" />
+    <TextView android:id="@+id/widget_alarm" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:textColor="#3B252C" />
+    <Button android:id="@+id/widget_register" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Registrar alimentação" android:textSize="16sp" />
+</LinearLayout>

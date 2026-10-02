@@ -1,38 +1,54 @@
-# Amamenta Bebê
+# Amamenta Bebê — Android 1.1
 
-Aplicativo Android nativo, offline e sem conta para registrar mamadas e lembrar o próximo horário. O intervalo é uma preferência de organização familiar, não uma recomendação médica.
+Continuação do aplicativo original. `applicationId` permanece `br.com.amamentabebe`; `versionCode` passa de 1 para 2. Não há migração destrutiva.
 
-## Funcionalidades
+## Recursos locais
 
-- Registro imediato com **Mamou agora**, protegido contra toque duplo acidental.
-- Próximo horário, contagem regressiva e resumo diário.
-- Intervalos predefinidos ou personalizados.
-- Histórico agrupado por dia, com edição, exclusão, lado, quantidade e observação.
-- Alarmes pontuais com `AlarmManager`, inclusive em Doze, e reagendamento após reiniciar.
-- Notificação com ações **Mamou agora**, **Adiar 10 min** e **Adiar 20 min**.
-- Status e atalhos para permissões de notificações e alarmes exatos.
-- Temas claro, escuro e conforme o sistema.
-- Room e DataStore locais; nenhum tracker, anúncio ou envio de dados.
+- Alimentação rápida protegida contra toque repetido; peito esquerdo/direito/ambos, mamadeira, ml, observações, data, horário e duração manual.
+- Cronômetro com início, pausa, continuação, troca de lado e finalização. Timestamps persistidos mantêm durações por lado e total com tela bloqueada. Aviso aos 30 minutos sem finalizar automaticamente.
+- Fraldas xixi, cocô ou ambos (uma única troca); resumo e histórico com filtros, edição e exclusão. Fraldas não alteram lembretes.
+- Modo Madrugada automático entre 22h e 6h, sempre ligado ou desligado.
+- AlarmManager, notificações, adiamentos 10/20 min e recuperação após reinicialização. Permissões negadas e alarme aproximado são informados; Android/fabricantes podem restringir entrega.
+- Widget com última/próxima alimentação, horário programado e registro rápido. Atualização por eventos sem polling contínuo.
+- Backup JSON pelo seletor Android; validação antes de gravar, mesclagem e deduplicação. Preserva alarmes/cronômetro atuais; restaura preferências após confirmação.
+- Sobre → Apoie o desenvolvedor: seção preparada, Pix desativado até receber código real e beneficiário. Com propriedades reais `PIX_COPY_PASTE`/`PIX_BENEFICIARY`, mostra QR gerado do código e botão para copiar. Contribuição opcional sem bloquear recursos.
 
-## Compilar
+## Preservação e assinatura
 
-Requisitos: JDK 17 e Android SDK 35.
+Room mantém `amamenta-bebe.db`, tabela `feedings` e campos originais; DataStore mantém `settings`. Migração 1→2 adiciona durações com zero padrão e novas tabelas. Testes atualizam banco real no esquema v1 e verificam conteúdo.
 
-```bash
+O workflow antigo gerava chave debug temporária. O certificado do último artifact v1 está em [docs/signing-baseline.json](docs/signing-baseline.json). Isso **não comprova** o certificado instalado no celular nem recupera a chave privada.
+
+**Não instale o APK de validação sobre o app com dados reais sem assinatura verificada. Não desinstale para contornar incompatibilidade.** A publicação do artifact `Amamenta-Bebe-APK` exige:
+
+- Secrets Actions: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` com a chave original.
+- Variable Actions: `INSTALLED_CERT_SHA256`, confirmado no APK instalado.
+- O workflow compara o certificado com `apksigner` e publica somente se coincidir. Sem chave, publica relatórios `Amamenta-Bebe-Validation`, sem APK distribuído.
+
+Se a chave privada do runner antigo não foi preservada, recuperar seu APK recupera apenas o certificado público. A atualização compatível fica bloqueada; preserve aplicativo e dados.
+
+## Família opcional
+
+Código preparado para acesso pessoal Firebase Auth e-mail/senha com e-mail verificado; administrador/cuidador; família/bebê; convites vinculados ao e-mail, token aleatório de 256 bits com hash SHA-256, validade inferior a 24h, aceite transacional de uso único, revogação e remoção de participantes.
+
+Room continua local. Fila persistida mantém UUID, autoria, revisão, pendência e tombstones. WorkManager tenta sincronizar com conexão, a cada 15 minutos ou após mudança; botão manual disponível. Conflitos preservam edição local até escolha explícita. Registros enviados permanecem no Room. **Histórico anterior só entra na fila após confirmação na interface.**
+
+Família fica **desativada sem configuração real**. Nenhum projeto/serviço foi criado ou implantado; não houve validação em dois celulares. Emulador verifica regras, não substitui testes Android completos da sincronização. Não declarar compartilhamento concluído antes da validação integrada.
+
+Configure Firebase Auth e Firestore Standard conforme [backend/README.md](backend/README.md), publique regras revisadas e forneça propriedades Gradle/variáveis reais `FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_PROJECT_ID` (também Variables do Actions). Não há credenciais fictícias. Não habilite cobrança sem autorização.
+
+Regras são protótipo testado para isolamento entre famílias, autoria imutável, papéis e convites temporários. Revise antes de distribuição ampla. Remover um participante revoga acesso remoto; dados já baixados não podem ser apagados remotamente com garantia.
+
+## Compilar e testar
+
+JDK 17, Android SDK 35; Kotlin/Compose compiler 2.3.20 e KSP 2.3.4.
+
+```sh
 ./gradlew testDebugUnitTest lintDebug assembleDebug
+npm ci --prefix backend --ignore-scripts
+npm run test:emulator --prefix backend
 ```
 
-O APK será criado em `app/build/outputs/apk/debug/app-debug.apk`.
+Windows: `gradlew.bat`. APK **local de validação** em `app/build/outputs/apk/debug/app-debug.apk`; sem chave original usa debug local, sem garantia de atualização. Emulador usa apenas `demo-amamenta-bebe`, sem implantação remota. CI executa regras, JVM/Robolectric, lint e build. [Auditoria](docs/V1.1-AUDIT.md) registra limites.
 
-## APK pelo GitHub Actions
-
-O workflow `.github/workflows/build-apk.yml` roda em pushes para `main`/`master` e manualmente em **Actions → Build Android APK → Run workflow**. Ao concluir, abra a execução e baixe o artifact **Amamenta-Bebe-APK**, que contém `amamenta-bebe.apk`.
-
-## Permissões Android
-
-- `POST_NOTIFICATIONS`: exibir o lembrete no Android 13+.
-- `SCHEDULE_EXACT_ALARM`: permitir horário exato no Android 12+; sem o acesso, o app usa alarme inexato e informa a limitação.
-- `RECEIVE_BOOT_COMPLETED`: restaurar um lembrete futuro após reiniciar.
-- `VIBRATE`: vibrar no aviso quando habilitado.
-
-As configurações de canais do Android têm precedência sobre som e vibração escolhidos no aplicativo.
+Sem iPhone, PWA, anúncios, assinaturas, premium, IA ou publicação em lojas. Duração/intervalos são dados de organização, sem avaliação médica de alimentação suficiente.

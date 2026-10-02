@@ -16,4 +16,4 @@ echo ERROR: JAVA_HOME points to an invalid directory: %JAVA_HOME%
 exit /b 1
 :execute
 "%JAVA_EXE%" -Xmx64m -Xms64m -Dorg.gradle.appname=gradlew -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
-endlocal
+endlocal & exit /b %ERRORLEVEL%

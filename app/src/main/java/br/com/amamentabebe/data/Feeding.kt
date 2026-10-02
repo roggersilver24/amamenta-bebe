@@ -2,6 +2,7 @@ package br.com.amamentabebe.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
 
 enum class FeedingType { QUICK, BREAST, BOTTLE }
 enum class BreastSide { NONE, LEFT, RIGHT, BOTH }
@@ -13,5 +14,7 @@ data class Feeding(
     val type: FeedingType = FeedingType.QUICK,
     val side: BreastSide = BreastSide.NONE,
     val amountMl: Int? = null,
-    val note: String = ""
+    val note: String = "",
+    @ColumnInfo(defaultValue = "0") val leftDurationMillis: Long = 0,
+    @ColumnInfo(defaultValue = "0") val rightDurationMillis: Long = 0
 )
